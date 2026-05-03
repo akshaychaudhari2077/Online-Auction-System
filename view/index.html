@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BidVault — Online Auction System</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/public/index.css">
+</head>
+<body>
+
+<!-- ===== NAV ===== -->
+<nav>
+  <div class="logo">Bid<span>Vault</span></div>
+  <ul>
+    <li><a href="#" class="nav-link active" data-page="home">Auctions</a></li>
+    <li><a href="#" class="nav-link" data-page="dashboard">Dashboard</a></li>
+    <li><a href="#" class="nav-link" data-page="list">List Item</a></li>
+  </ul>
+  <div class="nav-actions" id="navActions">
+    <button class="btn btn-ghost" id="loginBtn">Log In</button>
+    <button class="btn btn-gold" id="registerBtn">Register</button>
+  </div>
+</nav>
+
+<!-- ===== PAGE TABS ===== -->
+<div class="page-tabs" id="pageTabs">
+  <button class="tab-btn active" data-page="home">🏛️ Live Auctions</button>
+  <button class="tab-btn" data-page="dashboard">📊 Dashboard</button>
+  <button class="tab-btn" data-page="list">➕ List Item</button>
+</div>
+
+<!-- ===== TOAST CONTAINER ===== -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ===== LOGIN MODAL ===== -->
+<div class="overlay" id="loginModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('loginModal')">✕</button>
+    <h2>Welcome Back</h2>
+    <p class="sub">Sign in to place bids and manage your auctions.</p>
+    <div class="form-group">
+      <label>Email Address</label>
+      <input type="email" id="loginEmail" placeholder="you@example.com">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="loginPassword" placeholder="••••••••">
+    </div>
+    <button class="btn btn-gold btn-lg form-submit" onclick="handleLogin()">Sign In</button>
+    <div class="switch-link">Don't have an account? <a onclick="switchModal('loginModal','registerModal')">Register free</a></div>
+  </div>
+</div>
+
+<!-- ===== REGISTER MODAL ===== -->
+<div class="overlay" id="registerModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('registerModal')">✕</button>
+    <h2>Create Account</h2>
+    <p class="sub">Join BidVault — bid, win, and sell with confidence.</p>
+    <div class="form-row">
+      <div class="form-group">
+        <label>First Name</label>
+        <input type="text" id="regFirst" placeholder="Alex">
+      </div>
+      <div class="form-group">
+        <label>Last Name</label>
+        <input type="text" id="regLast" placeholder="Morgan">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Email Address</label>
+      <input type="email" id="regEmail" placeholder="you@example.com">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="regPassword" placeholder="Min. 8 characters">
+    </div>
+    <div class="form-group">
+      <label>Confirm Password</label>
+      <input type="password" id="regConfirm" placeholder="Repeat password">
+    </div>
+    <button class="btn btn-gold btn-lg form-submit" onclick="handleRegister()">Create Account</button>
+    <div class="switch-link">Already registered? <a onclick="switchModal('registerModal','loginModal')">Sign in</a></div>
+  </div>
+</div>
+
+<!-- ===== BID MODAL ===== -->
+<div class="overlay" id="bidModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('bidModal')">✕</button>
+    <h2 id="bidModalTitle">Place Your Bid</h2>
+    <p class="sub" id="bidModalSub">You are bidding on a live auction item.</p>
+
+    <div class="current-bid-display">
+      <div>
+        <div class="label">Current Highest Bid</div>
+        <div class="amount" id="bidCurrentAmt">$0</div>
+      </div>
+      <div style="text-align:right">
+        <div class="label">Time Left</div>
+        <div class="timer" id="bidTimerDisplay">--:--:--</div>
+      </div>
+    </div>
+
+    <div class="bid-history" id="bidHistory"></div>
+
+    <div class="form-group">
+      <label>Your Bid Amount (USD)</label>
+      <input type="number" id="bidAmount" placeholder="Enter amount" min="1">
+    </div>
+    <div id="bidMinNote" style="font-size:0.8rem; color:var(--muted); margin-top:-0.75rem; margin-bottom:1rem;"></div>
+    <button class="btn btn-gold btn-lg form-submit" onclick="submitBid()">🔨 Place Bid</button>
+  </div>
+</div>
+
+<!-- ===== HOME PAGE ===== -->
+<div class="page active" id="page-home">
+  <div class="hero">
+    <div class="hero-badge"><div class="live-dot"></div> 3 Live Auctions Right Now</div>
+    <h1>Bid Smart.<br><em>Win Big.</em></h1>
+    <p>Discover rare collectibles, art, tech and more. Every bid counts — every second matters.</p>
+    <div class="hero-ctas">
+      <button class="btn btn-gold btn-lg" onclick="scrollToAuctions()">Browse Auctions</button>
+      <button class="btn btn-ghost btn-lg" id="heroSellBtn">Sell an Item</button>
+    </div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-item"><div class="stat-num" id="statActive">7</div><div class="stat-label">Active Auctions</div></div>
+    <div class="stat-item"><div class="stat-num" id="statBidders">142</div><div class="stat-label">Registered Bidders</div></div>
+    <div class="stat-item"><div class="stat-num" id="statBids">1,283</div><div class="stat-label">Total Bids Placed</div></div>
+    <div class="stat-item"><div class="stat-num" id="statSold">$48.2K</div><div class="stat-label">Total Value Sold</div></div>
+  </div>
+
+  <section id="auctionSection">
+    <div class="section-header">
+      <h2>🔴 Live & Upcoming Auctions</h2>
+      <a href="#">View all →</a>
+    </div>
+
+    <div style="margin-bottom:1.5rem; display:flex; gap:0.5rem; flex-wrap:wrap;" id="filterBtns">
+      <button class="btn btn-ghost" style="padding:0.35rem 0.875rem;font-size:0.8rem;" onclick="filterAuctions('all')" id="f-all">All</button>
+      <button class="btn btn-ghost" style="padding:0.35rem 0.875rem;font-size:0.8rem;" onclick="filterAuctions('Art')" id="f-Art">Art</button>
+      <button class="btn btn-ghost" style="padding:0.35rem 0.875rem;font-size:0.8rem;" onclick="filterAuctions('Tech')" id="f-Tech">Tech</button>
+      <button class="btn btn-ghost" style="padding:0.35rem 0.875rem;font-size:0.8rem;" onclick="filterAuctions('Collectibles')" id="f-Collectibles">Collectibles</button>
+      <button class="btn btn-ghost" style="padding:0.35rem 0.875rem;font-size:0.8rem;" onclick="filterAuctions('Jewelry')" id="f-Jewelry">Jewelry</button>
+    </div>
+
+    <div class="auction-grid" id="auctionGrid"></div>
+  </section>
+
+  <section>
+    <div class="section-header"><h2>🏆 Recent Winners</h2></div>
+    <div id="winnersContainer"></div>
+  </section>
+
+  <section>
+    <div class="section-header"><h2>⚡ Live Bid Feed</h2></div>
+    <div class="live-feed" id="liveFeed"></div>
+  </section>
+</div>
+
+<!-- ===== DASHBOARD PAGE ===== -->
+<div class="page" id="page-dashboard">
+  <section>
+    <div id="dashNotLoggedIn" style="text-align:center;padding:4rem 2rem;">
+      <p style="font-size:2rem;margin-bottom:1rem;">🔐</p>
+      <p style="color:var(--muted);margin-bottom:1.5rem;">Sign in to view your personal dashboard.</p>
+      <button class="btn btn-gold" onclick="openModal('loginModal')">Sign In</button>
+    </div>
+
+    <div id="dashLoggedIn" style="display:none;">
+      <div class="section-header" style="margin-bottom:1.5rem;">
+        <h2>Welcome back, <span id="dashUsername" style="color:var(--gold)">User</span> 👋</h2>
+      </div>
+
+      <div class="user-stats">
+        <div class="u-stat"><div class="u-stat-num" id="dBidsPlaced">0</div><div class="u-stat-label">Bids Placed</div></div>
+        <div class="u-stat"><div class="u-stat-num" id="dAuctionsWon">0</div><div class="u-stat-label">Auctions Won</div></div>
+        <div class="u-stat"><div class="u-stat-num" id="dItemsListed">0</div><div class="u-stat-label">Items Listed</div></div>
+      </div>
+
+      <div class="dashboard-grid">
+        <div>
+          <div class="dash-card">
+            <h3>🎯 Your Active Bids</h3>
+            <div id="activeBidsList"></div>
+          </div>
+        </div>
+        <div class="dash-card">
+          <h3>📋 Your Listings</h3>
+          <div id="myListingsList"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ===== LIST ITEM PAGE ===== -->
+<div class="page" id="page-list">
+  <section>
+    <div id="listNotLoggedIn" style="text-align:center;padding:4rem 2rem;">
+      <p style="font-size:2rem;margin-bottom:1rem;">🛍️</p>
+      <p style="color:var(--muted);margin-bottom:1.5rem;">You need to be signed in to list an item for auction.</p>
+      <button class="btn btn-gold" onclick="openModal('loginModal')">Sign In to List</button>
+    </div>
+
+    <div id="listForm" style="display:none;">
+      <div class="list-form">
+        <h2>List an Item</h2>
+        <p>Fill in the details below. Your auction will go live immediately.</p>
+
+        <div class="form-group">
+          <label>Item Name</label>
+          <input type="text" id="listTitle" placeholder="e.g. Vintage Rolex Submariner 1969">
+        </div>
+
+        <div class="form-group">
+          <label>Category</label>
+          <select id="listCat">
+            <option value="Art">🎨 Art</option>
+            <option value="Tech">💻 Tech</option>
+            <option value="Collectibles">🏺 Collectibles</option>
+            <option value="Jewelry">💎 Jewelry</option>
+            <option value="Fashion">👗 Fashion</option>
+            <option value="Other">📦 Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="listDesc" placeholder="Describe your item — condition, provenance, dimensions, etc."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Item Icon / Emoji</label>
+          <div class="emoji-picker" id="emojiPicker">
+            <div class="ep-opt selected" data-emoji="🎨">🎨</div>
+            <div class="ep-opt" data-emoji="💻">💻</div>
+            <div class="ep-opt" data-emoji="⌚">⌚</div>
+            <div class="ep-opt" data-emoji="💎">💎</div>
+            <div class="ep-opt" data-emoji="🏺">🏺</div>
+            <div class="ep-opt" data-emoji="📷">📷</div>
+            <div class="ep-opt" data-emoji="🎸">🎸</div>
+            <div class="ep-opt" data-emoji="🚗">🚗</div>
+            <div class="ep-opt" data-emoji="📚">📚</div>
+            <div class="ep-opt" data-emoji="🎮">🎮</div>
+            <div class="ep-opt" data-emoji="🛸">🛸</div>
+            <div class="ep-opt" data-emoji="🗿">🗿</div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Starting Price (USD)</label>
+            <input type="number" id="listStart" placeholder="100" min="1">
+          </div>
+          <div class="form-group">
+            <label>Minimum Bid Increment</label>
+            <input type="number" id="listIncrement" placeholder="10" min="1">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Auction Duration</label>
+            <select id="listDuration">
+              <option value="1">1 hour</option>
+              <option value="3">3 hours</option>
+              <option value="6" selected>6 hours</option>
+              <option value="12">12 hours</option>
+              <option value="24">24 hours</option>
+              <option value="72">3 days</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Reserve Price (optional)</label>
+            <input type="number" id="listReserve" placeholder="Leave blank for no reserve">
+          </div>
+        </div>
+
+        <button class="btn btn-gold btn-lg form-submit" onclick="listItem()">🚀 List Item for Auction</button>
+      </div>
+    </div>
+  </section>
+</div>
+  <script src="/index.js"></script>
+</body>
+</html>
