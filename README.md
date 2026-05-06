@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🛒 Online Auction System (MERN Stack)
 
 ## 📌 Overview
@@ -149,3 +150,7 @@ npm install xyz
 ## 👨‍💻 Author
 
 Guruprasad Jadhav
+=======
+# Online-Auction-System
+A database-driven Online Auction System developed using Node.js and MongoDB. The project implements secure user authentication, auction listing management, and RESTful APIs, demonstrating backend development and database integration concepts.
+>>>>>>> 5be3a47c654995d7bd6ec7bd626a559ea3458139
